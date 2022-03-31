@@ -56,8 +56,59 @@ KAPPANHANG() {
     go install github.com/nonoo/kappanhang@latest
 }
 
+##################################
+#	WSJTX
+##################################
+WSJTX() {
+	sudo apt install -y build-essential git cmake gfortran fftw3-dev qtbase5-dev qttools5-dev libqt5serialport5-dev  qtmultimedia5-dev libqt5multimedia5-plugins libqt5sql5-sqlite autoconf automake libtool texinfo libusb-1.0-0-dev libudev-dev libboost-all-dev asciidoctor
+
+	FT8PKG=$(curl -s https://physics.princeton.edu/pulsar/k1jt/wsjtx.html | grep .tgz | sed 's/.*="//;s/">.*$//' | head -1)
+	FT8DIR=$(echo $FT8PKG | sed 's/.tgz//')
+	cd ${BUILDDIR}
+	wget https://physics.princeton.edu/pulsar/k1jt/$FT8PKG
+	tar -xvf $FT8PKG
+	rm $FT8PKG
+	cd $FT8DIR
+	cmake -D CMAKE_INSTALL_PREFIX=${BUILDDIR}/$FT8DIR
+	cmake -DWSJT_SKIP_MANPAGES=ON -DWSJT_GENERATE_DOCS=OFF
+	sudo cmake --build . --target install -j4
+	sudo mv ${BUILDDIR}/${FT8DIR}/bin/* /usr/local/bin/
+	sudo cp ${BUILDDIR}/${FT8DIR}/share/applications/wsjtx.desktop /usr/share/applications/
+	sudo cp ${BUILDDIR}/${FT8DIR}/share/pixmaps/wsjtx_icon.png /usr/share/pixmaps/
+}
+
+##################################
+#	JS8Call
+##################################
+JS8CALL() {
+    echo "###############################"
+    echo "Installing JS8Call Dependancies"
+    echo "###############################"
+    sudo apt-get install -y build-essential gfortran autoconf automake libtool cmake git asciidoctor libfftw3-dev qtdeclarative5-dev texinfo libqt5multimedia5 libqt5multimedia5-plugins qtmultimedia5-dev libusb-1.0.0-dev libqt5serialport5-dev asciidoc libudev-dev
+
+    JS8PKG=$(curl -s http://files.js8call.com/latest.html | grep .tgz | sed 's/.*js8call-/js8call-/;s/<.*$//')
+    JS8VERSION=$(echo $JS8PKG | sed 's/js8call-//;s/.tgz.*$//')
+    cd ${BUILDDIR}
+    echo "###################"
+    echo "Downloading JS8Call"
+    echo "###################"
+    wget http://files.js8call.com/$JS8VERSION/$JS8PKG
+    tar -xvf $JS8PKG
+    rm $JS8PKG
+    cd ${BUILDDIR}/js8call
+    echo "#################"
+    echo "Compiling JS8Call"
+    echo "#################"
+    cmake -D CMAKE_INSTALL_PREFIX=$HOME/Downloads/js8call
+    cmake --build . -- -j4
+    sudo cp js8 js8call /usr/local/bin
+    sudo cp js8call.desktop /usr/share/applications
+    sudo cp ./artwork/icon_128.svg /usr/share/pixmaps/js8call_icon.svg
+}
+
 HAMLIB
 KAPPANHANG
-
+WSJTX
+JS8CALL
 
 
