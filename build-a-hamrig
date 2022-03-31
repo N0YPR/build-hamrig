@@ -1,0 +1,63 @@
+#!/bin/bash
+
+#install ham radio stuff onto mint
+
+BUILDDIR=$HOME/.ham-source-files
+mkdir -p ${BUILDDIR}
+
+CLEANSOURCE(){
+#this function removes any old source files before
+#new files are downloaded for installation. This
+#function is called by install functions below.
+PACKAGE=$(ls $BUILDDIR | grep $PACKAGE)
+if [ -d $BUILDDIR/$PACKAGE ]; then
+sudo rm -rf $BUILDDIR/$PACKAGE*
+fi
+}
+
+################################
+#	HAMLIB
+################################
+HAMLIB() {
+    PACKAGE=hamlib
+    CLEANSOURCE
+    sudo apt install -y build-essential libusb-1.0-0 libusb-1.0-0-dev
+    cd ${BUILDDIR} || return
+    NEWRIG=$(curl -s https://sourceforge.net/projects/hamlib/files/latest/download |
+        grep -o https://downloads.sourceforge.net/project/hamlib/hamlib/[0-9].[0-9] |
+        head -n 1 | awk -F "/" '{print $7}')
+    HAMLIBLINK=https://sourceforge.net/projects/hamlib/files/hamlib/${NEWRIG}/hamlib-${NEWRIG}.tar.gz
+    echo "###################################"
+    echo "#		Installing Hamlib	"
+    echo "###################################"
+    wget --tries 2 --connect-timeout=60 ${HAMLIBLINK}
+
+    tar -xzf hamlib-${NEWRIG}.tar.gz
+    rm hamlib-${NEWRIG}.tar.gz
+    cd hamlib-${NEWRIG} || return
+    ./configure
+    make
+    sudo make install
+    sudo ldconfig
+    sudo make clean
+}
+
+################################
+#	KAPPANHANG
+################################
+KAPPANHANG() {
+    PACKAGE=kappanhang
+    CLEANSOURCE
+
+    sudo add-apt-repository ppa:longsleep/golang-backports -y
+    sudo apt-get update
+    sudo apt install -y golang libpulse-dev
+    
+    go install github.com/nonoo/kappanhang@latest
+}
+
+HAMLIB
+KAPPANHANG
+
+
+
